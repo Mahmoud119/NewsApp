@@ -1,6 +1,7 @@
 package com.example.newsapp
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -22,6 +23,7 @@ class MainActivity : AppCompatActivity() {
                     call: Call<SourceResponse?>,
                     response: Response<SourceResponse?>
                 ) {
+                    Log.e("onResponse", response.body().toString())
                     if(response.isSuccessful){
                         TODO("Show Tab Bar")
                     }else{
@@ -33,6 +35,7 @@ class MainActivity : AppCompatActivity() {
                     call: Call<SourceResponse?>,
                     t: Throwable
                 ) {
+                    Log.e("onFailure", t.message.toString())
                     TODO("Show Error")
                 }
 

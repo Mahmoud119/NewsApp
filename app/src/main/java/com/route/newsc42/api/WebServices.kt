@@ -9,13 +9,13 @@ import retrofit2.http.Query
 interface WebServices {
 
     @GET("/v2/top-headlines/sources")
-    fun loadSources(
+   suspend fun loadSources(
         @Query("category") categoryId: String
-    ): Call<SourcesResponse>
+    ): SourcesResponse
 
     @GET("/v2/everything")
-    fun loadArticles(
+    suspend fun loadArticles(
         @Query("sources") sourceId: String
-    ): Call<ArticlesResponse>
+    ): ArticlesResponse
 
 }

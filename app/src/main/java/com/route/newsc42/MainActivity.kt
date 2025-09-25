@@ -6,6 +6,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.coroutineScope
 import com.route.newsc42.databinding.ActivityMainBinding
 import com.route.newsc42.ui.screens.categories_fragment.CategoriesFragment
 
@@ -17,6 +18,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setUpDrawerLayout()
+
         showFragment(CategoriesFragment())
     }
 
@@ -38,7 +40,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun showFragment(fragment: Fragment){
+    fun showFragment(fragment: Fragment){ // suspend is working without blocking the app
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
             .addToBackStack(null)

@@ -6,6 +6,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.coroutineScope
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import com.google.android.material.tabs.TabLayout
 import com.google.gson.Gson
 import com.route.newsc42.api.ApiManager
@@ -15,6 +20,7 @@ import com.route.newsc42.api.model.BaseErrorResponse
 import com.route.newsc42.api.model.SourceDM
 import com.route.newsc42.api.model.SourcesResponse
 import com.route.newsc42.databinding.FragmentNewsBinding
+import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -43,43 +49,7 @@ class NewsFragment(val categoryId: String) : Fragment() {
         binding.articlesRecycler.adapter = articleAdapter
     }
 
-    private fun loadSources() {
-        hideError()
-        showLoading()
-        ApiManager.getWebServices().loadSources(categoryId)
-            .enqueue(object : Callback<SourcesResponse> {
-                override fun onResponse(
-                    call: Call<SourcesResponse?>,
-                    response: Response<SourcesResponse?>
-                ) {
-                    hideLoading()
-                    if (response.isSuccessful && response.body() != null) {
-                        showTabLayout(response.body()!!.sources ?: listOf())
-                    } else {
-                        val errorResponse = Gson().fromJson(
-                            response.errorBody()?.string(),
-                            BaseErrorResponse::class.java
-                        )
-                        showError(
-                            errorResponse.message ?: "Something went wrong please try again later "
-                        ) {
-                            loadSources()
-                        }
-                    }
-                }
 
-                override fun onFailure(
-                    call: Call<SourcesResponse?>,
-                    t: Throwable
-                ) {
-                    hideLoading()
-                    showError(t.localizedMessage) {
-                        loadSources()
-                    }
-                }
-
-            })
-    }
 
     private fun showTabLayout(sources: List<SourceDM>) {
         binding.tabLayout.isVisible = true
@@ -100,27 +70,7 @@ class NewsFragment(val categoryId: String) : Fragment() {
         })
     }
 
-    private fun loadArticles(sourceId: String) {
-        showLoading()
-        ApiManager.getWebServices().loadArticles(sourceId)
-            .enqueue(object : Callback<ArticlesResponse> {
-                override fun onResponse(
-                    call: Call<ArticlesResponse?>,
-                    response: Response<ArticlesResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null) {
-                        showArticlesList(response.body()!!.articles ?: listOf())
-                    }
-                }
 
-                override fun onFailure(
-                    call: Call<ArticlesResponse?>,
-                    t: Throwable
-                ) {
-                }
-
-            })
-    }
 
     private fun showArticlesList(articles: List<ArticleDM>) {
         hideLoading()
@@ -145,6 +95,46 @@ class NewsFragment(val categoryId: String) : Fragment() {
 
     fun hideError() {
         binding.errorView.root.isVisible = false
+    }
+
+}
+class NewsViewModel : ViewModel() {
+
+    val newsfragment : NewsFragment? = null
+    private fun loadSources(categoryId: String) {
+//        hideError()
+//        showLoading()
+        var isLoading= MutableLiveData<Boolean>()
+        viewModelScope.launch { // instead of lifecycleScope.launch
+            isLoading.value=true
+            try {
+                val response = ApiManager.getWebServices().loadSources(categoryId)
+//                showTabLayout(response.sources ?: listOf())
+//                hideLoading()
+                isLoading.value=false
+            } catch (e: Exception) {
+                isLoading.value=false
+//                hideLoading()
+//                showError(e.localizedMessage) {
+                    loadSources(categoryId)
+                }
+            }
+
+        }
+    }
+    private fun loadArticles(sourceId: String) {
+        showLoading()
+        viewModelScope.launch {
+            try {
+                val response = ApiManager.getWebServices().loadArticles(sourceId)
+                showArticlesList(response.articles ?: listOf())
+            } catch (e: Exception) {
+                hideLoading()
+                showError(e.localizedMessage) {
+                    loadArticles(sourceId)
+                }
+            }
+        }
     }
 
 }
